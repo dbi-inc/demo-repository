@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Compromised</title>
+    
+    <style>
+        /* General Styles for the Prank */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #0F0;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            overflow: hidden; /* Prevents scrolling */
+            /* Add this class for the initial "click to start" state */
+            cursor: pointer; 
+        }
+        
+        #content {
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        /* --- STAGE 1 & 3: Green Text Console --- */
+        .console-text {
+            white-space: pre-wrap;
+            text-align: left;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* --- NEW: Flickering Effect for Dying Screen --- */
+        .flicker {
+            animation: flicker-animation 0.1s steps(2, start) infinite;
+        }
+
+        @keyframes flicker-animation {
+            0% { opacity: 1; }
+            50% { opacity: 0.9; }
+            100% { opacity: 1; }
+        }
+
+        /* --- Large Red Warning Text --- */
+        .large-red-warning {
+            color: #FF0000; /* Bright Red */
+            font-size: 1.8em; /* Large size */
+            font-weight: bold;
+            display: block; /* Ensure it takes a new line */
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8); /* Stronger glow */
+        }
+
+        /* --- STAGE 2: BSOD Style --- */
+        .bsod {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0000AA; /* Classic Blue */
+            color: #FFFFFF;
+            font-family: 'Lucida Console', monospace;
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 40px;
+            box-sizing: border-box;
+            line-height: 1.5;
+            text-align: left;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .bsod-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .bsod-text {
+            margin-bottom: 20px;
+        }
+
+        /* --- STAGE 4: Black Screen --- */
+        #dark-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: none;
+            z-index: 100;
+        }
+
+        /* --- Prank Start Message (Made more generic/urgent) --- */
+        #start-message {
+            font-size: 1.5em;
+            color: #FF0000; /* Red for urgent warning */
+            text-shadow: 0 0 10px #FF0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        /* --- Shaking Effect for Drama --- */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="error-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRl9vT1JXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAADcQAACAA=" type="audio/wav">
+    </audio>
+
+    <div id="content">
+        <div id="start-message">
+            SYSTEM CRITICAL FAILURE: TAP TO ACKNOWLEDGE
+        </div>
+        <pre id="console-output" class="console-text"></pre>
+    </div>
+
+    <div id="bsod-screen" class="bsod">
+        <div class="bsod-title">
+            *** STOP: DEVICE_POWER_STATE_FAILURE
+        </div>
+        <div class="bsod-text">
+            Your device has encountered an irreversible failure due to external execution.<br>
+            The system is attempting to shut down services but cannot stabilize.
+        </div>
+        <div class="bsod-text">
+            * Attempting final data purge... (0%)
+        </div>
+    </div>
+
+    <div id="dark-screen"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startMessage = document.getElementById('start-message');
+            const consoleOutput = document.getElementById('console-output');
+            const bsodScreen = document.getElementById('bsod-screen');
+            const errorSound = document.getElementById('error-sound');
+            const darkScreen = document.getElementById('dark-screen');
+            const content = document.getElementById('content');
+            let sequenceStarted = false;
+            let soundLoopInterval = null; 
+
+            // --- Sequence Definitions ---
+            const stage1_message = 
+                `STATUS: CRITICAL - BATTERY FAULT
+-------------------------------------------------
+WARNING: Unidentified execution call initiated.
+Source: External link-tap event.
+Target: SYSTEM KERNEL AND WALLET.
+
+-------------------------------------------------
+>>> DEVICE POWER FAULT (Code: E-999) <<<
+
+**IRREVERSIBLE DAMAGE.** Your connection security was bypassed.
+System power is dropping dangerously fast.
+`;
+
+            // Stage 2: Countdown with frightening text focused on loss
+            const stage2_countdown = (seconds) => {
+                const redWarningHTML = `<span class="large-red-warning">CRITICAL: ACCOUNT BALANCE IS BEING DRAINED NOW</span>`;
+                
+                return `
+[!!] ACTION: **DATA LOSS IMMINENT**
+[..] Address: 0x${Math.random().toString(16).substr(2, 40).toUpperCase()}
+[..] Progress: **67% OF ASSETS TRANSFERRED**
+${redWarningHTML}
+-------------------------------------------------
+[!!] ACTION: All System Backups being deleted.
+[..] Device ID: ${Math.random().toString(36).substr(2, 8).toUpperCase()}
+[..] **ACCOUNT DELETION IN ${seconds} SECONDS...**
+-------------------------------------------------
+**SYSTEM STABILITY: FAILED. DATA IS LOST.**
+`;
+            }
+            
+            const final_message = `
+-------------------------------------------------
+[!] JUST KIDDING - this Time...
+[!] You've been warned.  STOP ACTING LIKE A DUMBASS!!
+
+**THIS DEVICE HAS BEEN COMPROMISED.**
+Next time, the data loss and the drained account will be real.
+
+Now go and think about what you've done. Only Dumbasses click Links they Don't know.
+---- Your shame will now be made known to the rest of the group! ----
+`;
+
+            // --- Core Prank Logic ---
+            
+            // Function to play the sound repeatedly
+            function startSoundLoop() {
+                stopSoundLoop(); 
+                
+                // Play the sound from the start
+                const playDing = () => {
+                    errorSound.currentTime = 0;
+                    // Attempting to play the audio
+                    errorSound.play().catch(e => {
+                        console.error("Audio playback failed (usually permission issue):", e);
+                        // If playback fails, we can't loop, so clear the interval
+                        stopSoundLoop(); 
+                    });
+                };
+
+                // Play the first time
+                playDing(); 
+                
+                // Set the interval to play it again every 500ms (stuck effect)
+                soundLoopInterval = setInterval(playDing, 500); 
+            }
+
+            // Function to stop the sound loop
+            function stopSoundLoop() {
+                clearInterval(soundLoopInterval);
+                errorSound.pause();
+                errorSound.currentTime = 0;
+            }
+
+            // The main execution function
+            function startPrank() {
+                if (sequenceStarted) return;
+                sequenceStarted = true;
+                
+                // 1. Immediately hide the start message, start sound, and shake
+                startMessage.style.display = 'none';
+                document.body.classList.remove('shake'); // Remove any prior shake if exists
+                document.body.classList.add('shake');
+                
+                startSoundLoop(); // Start the stuck sound loop immediately upon click
+
+                // 2. Display initial severe message (Display for ~5s)
+                // Add the flicker class to the console output
+                consoleOutput.classList.add('flicker'); 
+                
+                setTimeout(() => {
+                    consoleOutput.innerHTML = stage1_message;
+                    consoleOutput.style.opacity = 1;
+                }, 10); // Start immediately after shake/sound
+
+                // 3. Countdown and "Drain" simulation (20 seconds)
+                let countdownSeconds = 20; 
+                const countdownInterval = setInterval(() => {
+                    if (countdownSeconds <= 0) {
+                        clearInterval(countdownInterval);
+                        content.style.opacity = 0;
+                        document.body.classList.remove('shake');
+                        consoleOutput.classList.remove('flicker'); // Stop the flicker
+                        stopSoundLoop(); 
+
+                        // Stage 4: The BSOD
+                        setTimeout(showBSOD, 500);
+                        return;
+                    }
+                    consoleOutput.innerHTML = stage1_message + stage2_countdown(countdownSeconds);
+                    countdownSeconds--;
+                }, 1000);
+            }
+            
+            // The BSOD and Blackout sequence
+            function showBSOD() {
+                const DISPLAY_TIME = 4500; // 4.5 seconds
+
+                bsodScreen.style.display = 'flex';
+                setTimeout(() => bsodScreen.style.opacity = 1, 10); 
+                
+                // Stage 5: Completely dark screen 
+                setTimeout(() => {
+                    bsodScreen.style.opacity = 0;
+                    
+                    setTimeout(() => {
+                         bsodScreen.style.display = 'none';
+                         darkScreen.style.display = 'block';
+                         
+                         // Stage 6: The final reveal message
+                         setTimeout(showFinalMessage, DISPLAY_TIME); 
+                    }, 500); // Wait for BSOD fade-out transition
+                }, DISPLAY_TIME); 
+            }
+
+            function showFinalMessage() {
+                darkScreen.style.display = 'none';
+                document.body.style.backgroundColor = '#000'; 
+                
+                // Reset to console style for the final reveal
+                consoleOutput.innerHTML = final_message;
+                consoleOutput.style.opacity = 1;
+                content.style.opacity = 1;
+                
+                document.body.style.color = '#0F0';
+            }
+
+            // The single click handler to initiate everything
+            document.body.addEventListener('click', startPrank);
+        });
+    </script>
+</body>
+</html>
